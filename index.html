@@ -1,0 +1,666 @@
+i<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-Powered Resume & Interview Coach</title>
+  <meta name="description" content="Turn your resume into a career strategy. Match your profile to target jobs, practice interactive AI mock interviews, and close skill gaps.">
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            slate: {
+              950: '#030712',
+              900: '#0f172a',
+              800: '#1e293b',
+              700: '#334155',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Chart.js CDN for Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #030712;
+      color: #f8fafc;
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-card-hover:hover {
+      border-color: rgba(59, 130, 246, 0.4);
+      box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.2);
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #090d16;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col custom-scrollbar">
+
+  <!-- Top Navbar -->
+  <header class="h-16 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-50">
+    <div class="flex items-center gap-3 cursor-pointer" onclick="navigateTo('landing')">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+        <i data-lucide="sparkles" class="w-5 h-5"></i>
+      </div>
+      <div>
+        <span class="font-extrabold text-lg text-white tracking-tight">CareerAI</span>
+        <span class="ml-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">PRO</span>
+      </div>
+    </div>
+
+    <!-- Nav Items & Auth -->
+    <div class="flex items-center gap-4">
+      <div id="user-pill" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700 text-xs text-slate-300">
+        <i data-lucide="award" class="w-4 h-4 text-emerald-400"></i>
+        <span>Readiness Score: <strong class="text-emerald-400 font-semibold" id="nav-score">78/100</strong></span>
+      </div>
+
+      <button onclick="startDemo()" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold text-xs hover:brightness-110 shadow-md shadow-cyan-500/20 transition-all flex items-center gap-1.5">
+        <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+        <span>Try Demo Mode</span>
+      </button>
+
+      <div id="user-avatar-container" class="flex items-center gap-2 pl-3 border-l border-slate-800">
+        <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow">
+          A
+        </div>
+        <span class="text-xs font-medium text-slate-200 hidden sm:inline" id="user-display-name">Alex Chen</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex flex-1">
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 border-r border-slate-800 bg-slate-900/50 flex flex-col shrink-0 hidden md:flex min-h-[calc(100vh-4rem)] p-4 space-y-1">
+      <div class="px-3 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Career Strategy</div>
+      
+      <button onclick="navigateTo('dashboard')" id="nav-dashboard" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all w-full text-left">
+        <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+      </button>
+
+      <button onclick="navigateTo('resumes')" id="nav-resumes" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all w-full text-left">
+        <i data-lucide="file-text" class="w-4 h-4"></i> My Resume
+      </button>
+
+      <button onclick="navigateTo('jobs')" id="nav-jobs" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all w-full text-left">
+        <i data-lucide="target" class="w-4 h-4"></i> Job Matching
+      </button>
+
+      <button onclick="navigateTo('skill-gap')" id="nav-skill-gap" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all w-full text-left">
+        <i data-lucide="compass" class="w-4 h-4"></i> Skill Gap Analysis
+      </button>
+
+      <button onclick="navigateTo('tailor')" id="nav-tailor" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all w-full text-left">
+        <i data-lucide="wand-2" class="w-4 h-4"></i> Tailor Resume
+      </button>
+
+      <button onclick="navigateTo('interviews')" id="nav-interviews" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all w-full text-left">
+        <i data-lucide="video" class="w-4 h-4"></i> Interview Coach
+      </button>
+
+      <button onclick="navigateTo('progress')" id="nav-progress" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all w-full text-left">
+        <i data-lucide="line-chart" class="w-4 h-4"></i> Progress Tracking
+      </button>
+
+      <button onclick="navigateTo('improvement-plan')" id="nav-improvement-plan" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all w-full text-left">
+        <i data-lucide="check-square" class="w-4 h-4"></i> Improvement Plan
+      </button>
+
+      <div class="mt-auto p-4 rounded-xl bg-slate-900 border border-slate-800 text-center">
+        <i data-lucide="sparkles" class="w-5 h-5 text-cyan-400 mx-auto mb-1"></i>
+        <p class="text-xs font-semibold text-white">GitHub Pages Live</p>
+        <p class="text-[10px] text-slate-400 mt-1">Full AI Career Coach static demo build.</p>
+      </div>
+    </aside>
+
+    <!-- Main Content View Area -->
+    <main class="flex-1 p-6 md:p-8 max-w-6xl mx-auto w-full">
+
+      <!-- View 1: Landing Page -->
+      <section id="view-landing" class="space-y-12 py-8">
+        <div class="text-center max-w-3xl mx-auto space-y-6">
+          <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
+            <i data-lucide="sparkles" class="w-4 h-4"></i> AI-Powered Career Coach
+          </div>
+          <h1 class="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-tight">
+            Turn Your Resume Into a <span class="gradient-text">Career Strategy</span>
+          </h1>
+          <p class="text-lg text-slate-300 leading-relaxed">
+            Match your profile against target jobs, identify missing skills, practice interactive AI mock interviews, and receive personalized STAR method feedback.
+          </p>
+
+          <div class="flex flex-wrap items-center justify-center gap-4 pt-4">
+            <button onclick="startDemo()" class="px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold text-base hover:brightness-110 shadow-xl shadow-blue-500/30 transition-all flex items-center gap-2">
+              <span>Start Instant Hackathon Demo</span>
+              <i data-lucide="arrow-right" class="w-5 h-5"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Vision Banner -->
+        <div class="p-6 rounded-2xl glass-card border border-blue-500/30 max-w-3xl mx-auto text-center shadow-2xl">
+          <p class="text-xs font-semibold uppercase tracking-wider text-cyan-400">Core Product Vision</p>
+          <p class="text-lg font-bold text-white mt-1 italic">
+            “Understand the candidate. Understand the job. Identify the gap. Coach the candidate to close the gap.”
+          </p>
+        </div>
+
+        <!-- Feature Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
+          <div class="p-6 rounded-2xl glass-card border border-slate-800">
+            <i data-lucide="file-search" class="w-8 h-8 text-blue-400 mb-3"></i>
+            <h3 class="text-base font-bold text-white">AI Resume Analysis</h3>
+            <p class="text-xs text-slate-400 mt-2">Section parsing, keyword extraction, and weakness detection without fake metrics.</p>
+          </div>
+          <div class="p-6 rounded-2xl glass-card border border-slate-800">
+            <i data-lucide="target" class="w-8 h-8 text-cyan-400 mb-3"></i>
+            <h3 class="text-base font-bold text-white">Job Match & Skill Gaps</h3>
+            <p class="text-xs text-slate-400 mt-2">Match score calculation (83%), missing skill chips (Docker, AWS), and project roadmaps.</p>
+          </div>
+          <div class="p-6 rounded-2xl glass-card border border-slate-800">
+            <i data-lucide="video" class="w-8 h-8 text-emerald-400 mb-3"></i>
+            <h3 class="text-base font-bold text-white">Interactive Mock Interviews</h3>
+            <p class="text-xs text-slate-400 mt-2">Text & speech recording, question timer, and STAR method answer evaluations.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- View 2: Dashboard -->
+      <section id="view-dashboard" class="hidden space-y-8">
+        <div class="p-8 rounded-2xl bg-gradient-to-r from-blue-900/60 via-slate-900 to-indigo-900/40 border border-blue-500/20 relative overflow-hidden shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold mb-3">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Hackathon Demo Active
+            </div>
+            <h1 class="text-3xl font-extrabold text-white tracking-tight">Welcome back, <span class="gradient-text">Alex Chen</span></h1>
+            <p class="text-sm text-slate-300 mt-1 max-w-xl">Track your readiness score, practice customized AI interviews, and close skill gaps.</p>
+          </div>
+
+          <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 text-center shrink-0 min-w-[200px]">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Readiness Score</span>
+            <div class="text-4xl font-black text-emerald-400 mt-1">78 <span class="text-lg text-slate-500 font-normal">/ 100</span></div>
+            <div class="mt-2 w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div class="bg-gradient-to-r from-emerald-500 to-cyan-400 h-full rounded-full" style="width: 78%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metric Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="p-5 rounded-xl glass-card border border-slate-800">
+            <span class="text-xs text-slate-400 font-medium">Resume Quality</span>
+            <div class="text-2xl font-bold text-white mt-1">78 <span class="text-xs text-slate-500 font-normal">/100</span></div>
+          </div>
+          <div class="p-5 rounded-xl glass-card border border-slate-800">
+            <span class="text-xs text-slate-400 font-medium">Job Compatibility</span>
+            <div class="text-2xl font-bold text-cyan-400 mt-1">83%</div>
+          </div>
+          <div class="p-5 rounded-xl glass-card border border-slate-800">
+            <span class="text-xs text-slate-400 font-medium">Interview Skill</span>
+            <div class="text-2xl font-bold text-emerald-400 mt-1">74 <span class="text-xs text-slate-500 font-normal">/100</span></div>
+          </div>
+          <div class="p-5 rounded-xl glass-card border border-slate-800">
+            <span class="text-xs text-slate-400 font-medium">Communication</span>
+            <div class="text-2xl font-bold text-indigo-400 mt-1">80 <span class="text-xs text-slate-500 font-normal">/100</span></div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div>
+          <h2 className="text-lg font-bold text-white mb-4">Quick Actions</h2>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <button onclick="navigateTo('resumes')" class="p-4 rounded-xl glass-card glass-card-hover text-left space-y-2">
+              <i data-lucide="file-text" class="w-6 h-6 text-blue-400"></i>
+              <div class="text-xs font-bold text-white">Analyze Resume</div>
+            </button>
+            <button onclick="navigateTo('jobs')" class="p-4 rounded-xl glass-card glass-card-hover text-left space-y-2">
+              <i data-lucide="target" class="w-6 h-6 text-cyan-400"></i>
+              <div class="text-xs font-bold text-white">Match a Job</div>
+            </button>
+            <button onclick="navigateTo('tailor')" class="p-4 rounded-xl glass-card glass-card-hover text-left space-y-2">
+              <i data-lucide="wand-2" class="w-6 h-6 text-purple-400"></i>
+              <div class="text-xs font-bold text-white">Tailor Resume</div>
+            </button>
+            <button onclick="navigateTo('interviews')" class="p-4 rounded-xl glass-card glass-card-hover text-left space-y-2">
+              <i data-lucide="video" class="w-6 h-6 text-emerald-400"></i>
+              <div class="text-xs font-bold text-white">Start Interview</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Next Banner -->
+        <div class="p-6 rounded-2xl bg-gradient-to-r from-blue-900/40 via-slate-900 to-indigo-900/30 border border-blue-500/30 flex items-center justify-between">
+          <div>
+            <span class="text-xs font-semibold text-blue-400 uppercase">Recommended Next Step</span>
+            <h3 class="text-base font-bold text-white">Inspect Resume Quality & Section Extraction</h3>
+          </div>
+          <button onclick="navigateTo('resumes')" class="px-5 py-2 rounded-xl bg-blue-600 text-white font-semibold text-xs hover:bg-blue-500 flex items-center gap-1.5">
+            <span>View Resume Analysis</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </section>
+
+      <!-- View 3: Resumes -->
+      <section id="view-resumes" class="hidden space-y-8">
+        <div>
+          <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="file-search" class="w-6 h-6 text-blue-400"></i> AI Resume Upload & Quality Evaluation
+          </h1>
+          <p class="text-sm text-slate-400 mt-1">Uploaded File: <strong class="text-white">Alex_Chen_Software_Engineer_Resume.pdf</strong></p>
+        </div>
+
+        <div class="p-6 rounded-2xl glass-card border border-blue-500/30 flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-2xl bg-blue-600 text-white text-2xl font-black flex items-center justify-center shadow-lg">78</div>
+            <div>
+              <span class="text-xs font-semibold text-slate-400 uppercase">Overall Quality Score</span>
+              <h2 class="text-lg font-bold text-white">Strong Technical Foundation with Minor Keyword Gaps</h2>
+            </div>
+          </div>
+          <button onclick="navigateTo('jobs')" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold text-xs flex items-center gap-1.5">
+            <span>Match Job Description</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Breakdown Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="p-4 rounded-xl glass-card border border-slate-800">
+            <div class="flex justify-between text-xs font-bold text-white mb-2"><span>Structure</span> <span class="text-cyan-400">8/10</span></div>
+            <p class="text-[11px] text-slate-400">Clear section headings (Summary, Experience, Projects, Skills).</p>
+          </div>
+          <div class="p-4 rounded-xl glass-card border border-slate-800">
+            <div class="flex justify-between text-xs font-bold text-white mb-2"><span>Experience Impact</span> <span class="text-cyan-400">7/10</span></div>
+            <p class="text-[11px] text-slate-400">Good action verbs but needs more measurable metrics.</p>
+          </div>
+          <div class="p-4 rounded-xl glass-card border border-slate-800">
+            <div class="flex justify-between text-xs font-bold text-white mb-2"><span>Technical Skills</span> <span class="text-cyan-400">8/10</span></div>
+            <p class="text-[11px] text-slate-400">Strong Python, SQL, React; missing cloud containerization keywords.</p>
+          </div>
+          <div class="p-4 rounded-xl glass-card border border-slate-800">
+            <div class="flex justify-between text-xs font-bold text-white mb-2"><span>Bullet Clarity</span> <span class="text-cyan-400">8/10</span></div>
+            <p class="text-[11px] text-slate-400">Concise phrasing without excessive fluff.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- View 4: Job Matching -->
+      <section id="view-jobs" class="hidden space-y-8">
+        <div>
+          <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="target" class="w-6 h-6 text-cyan-400"></i> Job Compatibility Match Engine
+          </h1>
+          <p class="text-sm text-slate-400 mt-1">Target Role: <strong class="text-white">Software Engineer (Full-Stack) at TechCorp Solutions</strong></p>
+        </div>
+
+        <div class="p-6 rounded-2xl glass-card border border-cyan-500/30 flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white text-3xl font-black flex items-center justify-center shadow-lg">83%</div>
+            <div>
+              <span class="text-xs font-semibold text-cyan-400 uppercase">AI Job Compatibility Estimate</span>
+              <h2 class="text-xl font-bold text-white mt-0.5">High Profile Fit</h2>
+              <p class="text-xs text-slate-400 mt-1">Matches Python, SQL, React; Missing Docker, AWS cloud keywords.</p>
+            </div>
+          </div>
+          <button onclick="navigateTo('skill-gap')" class="px-5 py-2.5 rounded-xl bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 font-semibold text-xs flex items-center gap-1.5">
+            <span>View Skill Gap Analysis</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Skill Chips -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="p-6 rounded-2xl glass-card border border-emerald-500/30">
+            <h3 class="text-sm font-bold text-white mb-3">✓ Strong Match</h3>
+            <div class="flex flex-wrap gap-2 text-xs">
+              <span class="px-2.5 py-1 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">Python</span>
+              <span class="px-2.5 py-1 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">SQL</span>
+              <span class="px-2.5 py-1 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">React</span>
+              <span class="px-2.5 py-1 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">FastAPI</span>
+            </div>
+          </div>
+          <div class="p-6 rounded-2xl glass-card border border-amber-500/30">
+            <h3 class="text-sm font-bold text-white mb-3">! Partial Match</h3>
+            <div class="flex flex-wrap gap-2 text-xs">
+              <span class="px-2.5 py-1 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">REST API Design</span>
+              <span class="px-2.5 py-1 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">System Architecture</span>
+            </div>
+          </div>
+          <div class="p-6 rounded-2xl glass-card border border-red-500/30">
+            <h3 class="text-sm font-bold text-white mb-3">✕ Missing Job Skills</h3>
+            <div class="flex flex-wrap gap-2 text-xs">
+              <span class="px-2.5 py-1 rounded bg-red-500/10 text-red-300 border border-red-500/20">Docker</span>
+              <span class="px-2.5 py-1 rounded bg-red-500/10 text-red-300 border border-red-500/20">AWS EC2/S3</span>
+              <span class="px-2.5 py-1 rounded bg-red-500/10 text-red-300 border border-red-500/20">Kubernetes</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- View 5: Skill Gap -->
+      <section id="view-skill-gap" class="hidden space-y-8">
+        <div>
+          <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="compass" class="w-6 h-6 text-indigo-400"></i> Skill Gap Analysis & Action Plans
+          </h1>
+          <p class="text-sm text-slate-400 mt-1">Targeted roadmap to close missing technical qualifications.</p>
+        </div>
+
+        <div class="space-y-4">
+          <div class="p-6 rounded-2xl glass-card border border-slate-800 space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-white">Docker Containerization</span>
+              <span class="text-xs bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded font-bold uppercase">High Priority</span>
+            </div>
+            <p class="text-xs text-slate-300"><strong>Why it matters:</strong> Required for local microservice orchestration and deployment.</p>
+            <div class="p-3 rounded-xl bg-slate-950 text-xs text-indigo-300 border border-slate-800">
+              💡 <strong>Mini-Project:</strong> Write a multi-stage Dockerfile for FastAPI + React managed with docker-compose.
+            </div>
+          </div>
+
+          <div class="p-6 rounded-2xl glass-card border border-slate-800 space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-white">AWS Cloud Services (EC2 / S3)</span>
+              <span class="text-xs bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded font-bold uppercase">High Priority</span>
+            </div>
+            <p class="text-xs text-slate-300"><strong>Why it matters:</strong> Specified in target job requirements for hosting web APIs.</p>
+            <div class="p-3 rounded-xl bg-slate-950 text-xs text-indigo-300 border border-slate-800">
+              💡 <strong>Mini-Project:</strong> Deploy your containerized API to EC2 behind an Nginx reverse proxy.
+            </div>
+          </div>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-gradient-to-r from-blue-900/40 via-slate-900 to-indigo-900/30 border border-blue-500/30 flex items-center justify-between">
+          <div>
+            <span class="text-xs font-semibold text-blue-400 uppercase">Recommended Next Step</span>
+            <h3 class="text-base font-bold text-white">Tailor Resume Bullet Points for Software Engineer Role</h3>
+          </div>
+          <button onclick="navigateTo('tailor')" class="px-5 py-2 rounded-xl bg-purple-600 text-white font-semibold text-xs flex items-center gap-1.5">
+            <span>Tailor Resume</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </section>
+
+      <!-- View 6: Tailor Resume -->
+      <section id="view-tailor" class="hidden space-y-8">
+        <div>
+          <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="wand-2" class="w-6 h-6 text-purple-400"></i> AI Resume Section Tailoring
+          </h1>
+          <p class="text-sm text-slate-400 mt-1">Optimize bullet phrasing specifically for TechCorp Solutions.</p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs">
+          🛡️ <strong>Safety Guarantee:</strong> AI suggestions strengthen action verbs without fabricating unearned experience.
+        </div>
+
+        <div class="p-6 rounded-2xl glass-card border border-purple-500/30 space-y-3">
+          <span class="text-xs font-bold text-purple-400 uppercase">AI Tailored Summary</span>
+          <p class="text-sm text-slate-200 bg-slate-950 p-4 rounded-xl border border-slate-800">
+            "Full-Stack Engineer proficient in Python (FastAPI, SQL) and React. Experienced building scalable REST APIs and containerized web services aligned with high-availability cloud standards."
+          </p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-gradient-to-r from-emerald-900/40 via-slate-900 to-teal-900/30 border border-emerald-500/30 flex items-center justify-between">
+          <div>
+            <span class="text-xs font-semibold text-emerald-400 uppercase">Recommended Next Step</span>
+            <h3 class="text-base font-bold text-white">Practice Personalized AI Mock Interview</h3>
+          </div>
+          <button onclick="navigateTo('interviews')" class="px-5 py-2 rounded-xl bg-emerald-600 text-white font-semibold text-xs flex items-center gap-1.5">
+            <span>Start Mock Interview</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </section>
+
+      <!-- View 7: Interview Coach -->
+      <section id="view-interviews" class="hidden space-y-8">
+        <div class="text-center max-w-xl mx-auto space-y-2">
+          <i data-lucide="video" class="w-10 h-10 text-emerald-400 mx-auto"></i>
+          <h1 class="text-2xl font-bold text-white">AI Personalized Mock Interview</h1>
+          <p class="text-xs text-slate-400">Custom questions generated from your resume and target job requirements.</p>
+        </div>
+
+        <div class="p-6 rounded-2xl glass-card border border-slate-800 max-w-xl mx-auto space-y-6">
+          <div class="p-4 rounded-xl bg-slate-950 text-xs text-slate-300 flex justify-between">
+            <span>Candidate: <strong>Alex Chen</strong></span>
+            <span>Target Job: <strong>Software Engineer</strong></span>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-slate-300">Interview Type:</label>
+            <div class="grid grid-cols-3 gap-2 text-xs">
+              <button class="py-2 rounded-xl bg-emerald-600 text-white font-bold">Technical</button>
+              <button class="py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400">Behavioral</button>
+              <button class="py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400">HR</button>
+            </div>
+          </div>
+
+          <button onclick="startInterviewRoom()" class="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-sm shadow-xl hover:brightness-110 flex items-center justify-center gap-2">
+            <i data-lucide="play" class="w-4 h-4 fill-current"></i> Start Mock Interview Room
+          </button>
+        </div>
+      </section>
+
+      <!-- View 8: Interview Room -->
+      <section id="view-interview-room" class="hidden space-y-6">
+        <div class="p-4 rounded-2xl glass-card border border-slate-800 flex justify-between items-center text-xs">
+          <span class="font-bold text-white">Technical Interview Room</span>
+          <span class="text-emerald-400 font-bold">Question 1 of 3</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div class="lg:col-span-5 p-6 rounded-2xl glass-card border border-slate-800 space-y-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold">AI</div>
+              <div>
+                <h3 class="text-xs font-bold text-white">AI Executive Interviewer</h3>
+                <span class="text-[10px] text-emerald-400">● Active</span>
+              </div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-950 border border-blue-500/30 text-slate-100 text-sm font-medium leading-relaxed">
+              "How do you optimize a REST API backend endpoint in Python when handling high database query loads?"
+            </div>
+          </div>
+
+          <div class="lg:col-span-7 p-6 rounded-2xl glass-card border border-slate-800 space-y-4">
+            <h3 class="text-xs font-bold text-white">Your Response Workspace</h3>
+            <textarea id="answer-input" rows="5" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500" placeholder="Type your response or use voice input...">To optimize REST API endpoints in Python, I implement asynchronous database queries with SQLAlchemy 2.0 async, add Redis caching for frequent GET requests, and optimize database indexing.</textarea>
+            
+            <button onclick="submitAnswer()" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-xs hover:brightness-110 shadow-lg flex items-center justify-center gap-2">
+              <i data-lucide="send" class="w-4 h-4"></i> Submit Answer for AI STAR Evaluation
+            </button>
+          </div>
+        </div>
+
+        <div id="answer-feedback-box" class="hidden p-6 rounded-2xl glass-card border border-emerald-500/30 space-y-4">
+          <div class="flex justify-between items-center">
+            <span class="text-emerald-400 font-bold text-sm">Answer Score: 85/100</span>
+            <button onclick="navigateTo('improvement-plan')" class="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold flex items-center gap-1">
+              Finish Session & View Improvement Plan <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+          <p class="text-xs text-slate-300"><strong>STAR Checklist:</strong> Situation: ✅ | Task: ✅ | Action: ✅ | Result: ⚠️ (Add measurable latency reduction % metric)</p>
+        </div>
+      </section>
+
+      <!-- View 9: Progress -->
+      <section id="view-progress" class="hidden space-y-8">
+        <div>
+          <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="line-chart" class="w-6 h-6 text-purple-400"></i> Progress Tracking & Performance Trajectory
+          </h1>
+          <p class="text-sm text-slate-400 mt-1">Historical score growth across resume quality, job match fit, and interview performance.</p>
+        </div>
+
+        <div class="p-6 rounded-2xl glass-card border border-slate-800 space-y-4">
+          <h3 class="text-sm font-bold text-white">Readiness Trajectory</h3>
+          <div class="h-64">
+            <canvas id="progressChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- View 10: Improvement Plan -->
+      <section id="view-improvement-plan" class="hidden space-y-8">
+        <div>
+          <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="check-square" class="w-6 h-6 text-blue-400"></i> Personalized 3-Week Improvement Plan
+          </h1>
+          <p class="text-sm text-slate-400 mt-1">Synthesized action roadmap to reach peak career readiness.</p>
+        </div>
+
+        <div class="space-y-4">
+          <div class="p-6 rounded-2xl glass-card border border-slate-800 space-y-3">
+            <h3 class="font-bold text-white flex items-center gap-2"><span class="w-6 h-6 rounded bg-blue-500/20 text-blue-400 text-xs flex items-center justify-center">W1</span> Week 1: Resume & Keyword Optimization</h3>
+            <p class="text-xs text-slate-300">• Integrate Docker containerization terms into project descriptions.<br>• Refine summary phrasing to match full-stack requirements.</p>
+          </div>
+
+          <div class="p-6 rounded-2xl glass-card border border-slate-800 space-y-3">
+            <h3 class="font-bold text-white flex items-center gap-2"><span class="w-6 h-6 rounded bg-indigo-500/20 text-indigo-400 text-xs flex items-center justify-center">W2</span> Week 2: Technical Skill Gap Closure</h3>
+            <p class="text-xs text-slate-300">• Build hands-on docker-compose project.<br>• Practice AWS EC2 backend deployment.</p>
+          </div>
+
+          <div class="p-6 rounded-2xl glass-card border border-slate-800 space-y-3">
+            <h3 class="font-bold text-white flex items-center gap-2"><span class="w-6 h-6 rounded bg-emerald-500/20 text-emerald-400 text-xs flex items-center justify-center">W3</span> Week 3: Interview Mastery & STAR Refinement</h3>
+            <p class="text-xs text-slate-300">• Practice behavioral STAR answers focusing on quantifiable metrics.<br>• Complete retake mock interview.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    // Navigation Routing Logic
+    const views = ['landing', 'dashboard', 'resumes', 'jobs', 'skill-gap', 'tailor', 'interviews', 'interview-room', 'progress', 'improvement-plan'];
+
+    function navigateTo(viewId) {
+      views.forEach(v => {
+        const el = document.getElementById('view-' + v);
+        if (el) el.classList.add('hidden');
+        const navBtn = document.getElementById('nav-' + v);
+        if (navBtn) {
+          navBtn.classList.remove('bg-blue-600/15', 'text-blue-400', 'border', 'border-blue-500/20');
+          navBtn.classList.add('text-slate-400');
+        }
+      });
+
+      const activeEl = document.getElementById('view-' + viewId);
+      if (activeEl) activeEl.classList.remove('hidden');
+
+      const activeNavBtn = document.getElementById('nav-' + viewId);
+      if (activeNavBtn) {
+        activeNavBtn.classList.remove('text-slate-400');
+        activeNavBtn.classList.add('bg-blue-600/15', 'text-blue-400', 'border', 'border-blue-500/20');
+      }
+
+      window.scrollTo(0, 0);
+      lucide.createIcons();
+
+      if (viewId === 'progress') {
+        renderProgressChart();
+      }
+    }
+
+    function startDemo() {
+      document.getElementById('user-pill').classList.remove('hidden');
+      navigateTo('dashboard');
+    }
+
+    function startInterviewRoom() {
+      navigateTo('interview-room');
+    }
+
+    function submitAnswer() {
+      document.getElementById('answer-feedback-box').classList.remove('hidden');
+    }
+
+    // Chart Render
+    let chartInstance = null;
+    function renderProgressChart() {
+      const ctx = document.getElementById('progressChart');
+      if (!ctx) return;
+      if (chartInstance) chartInstance.destroy();
+
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Session 1', 'Session 2', 'Session 3', 'Session 4'],
+          datasets: [
+            {
+              label: 'Job Match Fit %',
+              data: [65, 71, 78, 83],
+              borderColor: '#06b6d4',
+              backgroundColor: 'rgba(6, 182, 212, 0.1)',
+              tension: 0.3,
+              fill: true
+            },
+            {
+              label: 'Interview Score',
+              data: [58, 64, 70, 74],
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              tension: 0.3,
+              fill: true
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#94a3b8' } }
+          },
+          scales: {
+            x: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' } },
+            y: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' }, min: 50, max: 100 }
+          }
+        }
+      });
+    }
+
+    // Initialize Lucide Icons on load
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
